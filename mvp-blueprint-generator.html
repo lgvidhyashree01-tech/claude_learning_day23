@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Startup Customer &amp; MVP Blueprint Generator</title>
+<style>
+  :root{
+    --primary:#2563eb;
+    --primary-dim:rgba(37,99,235,0.12);
+    --primary-line:rgba(37,99,235,0.35);
+    --success:#10b981;
+    --success-dim:rgba(16,185,129,0.12);
+    --warning:#f59e0b;
+    --warning-dim:rgba(245,158,11,0.12);
+    --danger:#ef4444;
+    --danger-dim:rgba(239,68,68,0.12);
+    --dark:#0f172a;
+
+    /* light theme tokens */
+    --bg-0:#f3f6fb;
+    --bg-1:#ffffff;
+    --bg-2:#f8fafc;
+    --bg-glass:rgba(255,255,255,0.65);
+    --border:rgba(15,23,42,0.09);
+    --border-soft:rgba(15,23,42,0.14);
+    --text-0:#0f172a;
+    --text-1:#475569;
+    --text-2:#94a3b8;
+    --shadow-card:0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -22px rgba(15,23,42,0.18);
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:9px;
+  }
+
+  html[data-theme="dark"]{
+    --bg-0:#0b1020;
+    --bg-1:#0f172a;
+    --bg-2:#141b2e;
+    --bg-glass:rgba(20,27,46,0.6);
+    --border:rgba(255,255,255,0.07);
+    --border-soft:rgba(255,255,255,0.13);
+    --text-0:#f1f5f9;
+    --text-1:#a8b3c7;
+    --text-2:#5d6b87;
+    --shadow-card:0 1px 0 rgba(255,255,255,0.04) inset, 0 18px 44px -22px rgba(0,0,0,0.65);
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    background:
+      radial-gradient(circle at 10% -10%, var(--primary-dim), transparent 40%),
+      var(--bg-0);
+    color:var(--text-0);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    transition:background .25s ease, color .25s ease;
+  }
+
+  .display{ font-family:'Plus Jakarta Sans', sans-serif; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+  }
+
+  ::selection{ background:var(--primary-dim); }
+  button{ font-family:inherit; }
+  a{ color:var(--primary); }
+
+  .glass{
+    background:var(--bg-glass);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);
+  }
+
+  /* ============================================================
+     INTAKE SCREEN
+  ============================================================ */
+  #intakeScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 20px;
+  }
+  .intake-shell{ width:100%; max-width:640px; }
+
+  .intake-brand{
+    display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:30px;
+  }
+  .intake-brand .brand-mark{
+    width:32px;height:32px;border-radius:9px;
+    background:linear-gradient(145deg, var(--primary), #60a5fa);
+    flex-shrink:0;
+  }
+  .intake-brand span{ font-family:'JetBrains Mono', monospace; font-size:0.8rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-1); }
+
+  .intake-card{ padding:38px 34px; }
+  .intake-card h1{
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:1.7rem; font-weight:800; letter-spacing:-0.02em; margin:0 0 8px; text-align:center;
+  }
+  .intake-card .intake-sub{ text-align:center; font-size:0.92rem; color:var(--text-1); margin:0 0 30px; line-height:1.55; }
+
+  .choice-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:8px; }
+  @media (max-width:480px){ .choice-row{ grid-template-columns:1fr; } }
+
+  .choice-card{
+    padding:24px 18px;
+    border-radius:var(--radius-md);
+    border:1.5px solid var(--border-soft);
+    background:var(--bg-2);
+    cursor:pointer;
+    text-align:center;
+    transition:all .18s ease;
+  }
+  .choice-card:hover{ border-color:var(--primary-line); transform:translateY(-2px); }
+  .choice-card .cc-icon{ font-size:1.8rem; margin-bottom:10px; }
+  .choice-card .cc-title{ font-weight:700; font-size:1rem; margin-bottom:4px; }
+  .choice-card .cc-sub{ font-size:0.78rem; color:var(--text-2); }
+
+  /* paste / form panels */
+  .intake-panel{ display:none; flex-direction:column; gap:16px; margin-top:10px; }
+  .intake-panel.active{ display:flex; }
+
+  .back-link{
+    font-size:0.82rem; color:var(--text-2); cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+    margin-bottom:6px; width:fit-content;
+  }
+  .back-link:hover{ color:var(--primary); }
+
+  .field-group{ display:flex; flex-direction:column; gap:6px; }
+  .field-group label{ font-size:0.78rem; font-weight:600; color:var(--text-1); text-transform:uppercase; letter-spacing:0.04em; }
+  .field-group .field-hint{ font-size:0.74rem; color:var(--text-2); margin-top:-2px; }
+
+  textarea, input[type="text"]{
+    background:var(--bg-2);
+    border:1.5px solid var(--border-soft);
+    border-radius:var(--radius-sm);
+    color:var(--text-0);
+    font-family:'Inter', sans-serif;
+    font-size:0.92rem;
+    padding:12px 14px;
+    outline:none;
+    width:100%;
+    transition:border-color .15s ease;
+  }
+  textarea:focus, input[type="text"]:focus{ border-color:var(--primary); }
+  textarea{ resize:vertical; min-height:90px; line-height:1.55; }
+  textarea.big{ min-height:220px; font-family:'JetBrains Mono', monospace; font-size:0.84rem; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:13px 22px; border-radius:999px; border:1.5px solid transparent;
+    font-size:0.9rem; font-weight:700; cursor:pointer; transition:all .18s ease;
+  }
+  .btn-primary{ background:var(--primary); color:#fff; }
+  .btn-primary:hover{ filter:brightness(1.08); transform:translateY(-1px); }
+  .btn-ghost{ background:var(--bg-2); color:var(--text-0); border-color:var(--border-soft); }
+  .btn-ghost:hover{ border-color:var(--primary-line); }
+  .btn-sm{ padding:8px 16px; font-size:0.8rem; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  .extract-preview{
+    display:none;
+    background:var(--bg-2); border:1px solid var(--border); border-radius:var(--radius-md);
+    padding:16px 18px; font-size:0.83rem; color:var(--text-1); line-height:1.6;
+  }
+  .extract-preview.show{ display:block; }
+  .extract-preview .ep-row{ display:flex; gap:8px; padding:6px 0; border-top:1px solid var(--border); }
+  .extract-preview .ep-row:first-child{ border-top:none; }
+  .extract-preview .ep-label{ font-weight:700; color:var(--text-0); min-width:120px; flex-shrink:0; font-size:0.76rem; text-transform:uppercase; letter-spacing:0.04em; }
+
+  .intake-theme-toggle{
+    position:fixed; top:18px; right:18px;
+    width:40px; height:40px; border-radius:50%;
+    background:var(--bg-1); border:1.5px solid var(--border-soft);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem;
+    z-index:50;
+  }
+</style>
+
+<style>
+  /* ============================================================
+     REPORT APP SHELL
+  ============================================================ */
+  #appScreen{ display:none; min-height:100vh; }
+  #appScreen.active{ display:flex; }
+
+  .sidebar{
+    width:260px;
+    flex-shrink:0;
+    background:var(--bg-1);
+    border-right:1px solid var(--border);
+    padding:22px 16px;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    z-index:20;
+    transition:transform .25s ease;
+  }
+
+  .sidebar-brand{ display:flex; align-items:center; gap:10px; padding:0 6px 14px; border-bottom:1px solid var(--border); }
+  .sidebar-brand .brand-mark{ width:28px;height:28px;border-radius:8px; background:linear-gradient(145deg, var(--primary), #60a5fa); flex-shrink:0; }
+  .sidebar-brand span{ font-weight:800; font-size:0.95rem; font-family:'Plus Jakarta Sans', sans-serif; }
+
+  .sidebar-search{
+    display:flex; align-items:center; gap:8px;
+    background:var(--bg-2); border:1px solid var(--border-soft); border-radius:var(--radius-sm);
+    padding:9px 12px;
+  }
+  .sidebar-search input{
+    border:none; background:transparent; outline:none; font-size:0.84rem; color:var(--text-0); width:100%; padding:0;
+  }
+  .sidebar-search input::placeholder{ color:var(--text-2); }
+
+  .sidebar-nav{ display:flex; flex-direction:column; gap:2px; flex:1; overflow-y:auto; }
+  .nav-item{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:var(--radius-sm);
+    font-size:0.83rem; color:var(--text-1); cursor:pointer;
+    transition:all .15s ease;
+  }
+  .nav-item:hover{ background:var(--bg-2); color:var(--text-0); }
+  .nav-item.active{ background:var(--primary-dim); color:var(--primary); font-weight:700; }
+  .nav-item .nav-num{ font-family:'JetBrains Mono', monospace; font-size:0.68rem; color:var(--text-2); width:16px; flex-shrink:0; }
+  .nav-item.active .nav-num{ color:var(--primary); }
+  .nav-item mark{ background:var(--warning-dim); color:var(--text-0); border-radius:2px; }
+
+  .sidebar-footer{ display:flex; flex-direction:column; gap:8px; padding-top:12px; border-top:1px solid var(--border); }
+
+  .theme-toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 10px; border-radius:var(--radius-sm); background:var(--bg-2); font-size:0.82rem;
+  }
+  .theme-switch{
+    width:38px; height:21px; border-radius:99px; background:var(--border-soft);
+    position:relative; cursor:pointer; transition:background .2s ease; flex-shrink:0;
+  }
+  .theme-switch::after{
+    content:""; position:absolute; top:2px; left:2px; width:17px; height:17px; border-radius:50%;
+    background:#fff; transition:transform .2s ease; box-shadow:0 1px 3px rgba(0,0,0,0.3);
+  }
+  html[data-theme="dark"] .theme-switch{ background:var(--primary); }
+  html[data-theme="dark"] .theme-switch::after{ transform:translateX(17px); }
+
+  .sidebar-toggle-mobile{
+    display:none;
+    position:fixed; top:16px; left:16px; z-index:60;
+    width:42px; height:42px; border-radius:50%;
+    background:var(--bg-1); border:1.5px solid var(--border-soft);
+    align-items:center; justify-content:center; cursor:pointer; font-size:1.2rem;
+    box-shadow:0 6px 18px rgba(0,0,0,0.15);
+  }
+
+  .main-content{ flex:1; min-width:0; }
+
+  .topbar{
+    position:sticky; top:0; z-index:15;
+    background:var(--bg-glass);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border);
+    padding:16px 28px;
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  }
+  .topbar h1{ font-family:'Plus Jakarta Sans', sans-serif; font-size:1.15rem; font-weight:800; margin:0; }
+  .topbar .topbar-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .report-container{ max-width:1180px; margin:0 auto; padding:30px 28px 90px; }
+
+  /* ============ section shell w/ collapse ============ */
+  .rsection{ margin-bottom:38px; scroll-margin-top:84px; }
+  .rsection-head{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    margin-bottom:18px; cursor:pointer; user-select:none;
+  }
+  .rsection-head-left{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .rsection-num{ font-family:'JetBrains Mono', monospace; font-size:0.7rem; color:var(--text-2); border:1px solid var(--border-soft); border-radius:6px; padding:3px 8px; }
+  .rsection-title{ font-family:'Plus Jakarta Sans', sans-serif; font-size:1.2rem; font-weight:800; color:var(--text-0); }
+  .rsection-sub{ font-size:0.82rem; color:var(--text-2); margin-top:3px; max-width:620px; line-height:1.5; }
+  .collapse-chevron{ font-size:0.85rem; color:var(--text-2); transition:transform .2s ease; flex-shrink:0; }
+  .rsection.collapsed .collapse-chevron{ transform:rotate(-90deg); }
+  .rsection-body{ overflow:hidden; }
+  .rsection.collapsed .rsection-body{ display:none; }
+
+  mark.search-hit{ background:var(--warning); color:#111; border-radius:2px; padding:0 1px; }
+
+  /* tags/badges */
+  .badge{ display:inline-flex; align-items:center; gap:5px; font-size:0.72rem; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; }
+  .badge-low, .badge-green{ background:var(--success-dim); color:var(--success); }
+  .badge-medium, .badge-yellow{ background:var(--warning-dim); color:var(--warning); }
+  .badge-high, .badge-red{ background:var(--danger-dim); color:var(--danger); }
+  .badge-blue{ background:var(--primary-dim); color:var(--primary); }
+
+  /* ============ Section 1: Executive Summary ============ */
+  .exec-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  @media (max-width:980px){ .exec-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:560px){ .exec-grid{ grid-template-columns:1fr; } }
+  .exec-card{ padding:20px; }
+  .exec-card .ec-icon{ width:34px;height:34px;border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:0.95rem; margin-bottom:12px; }
+  .exec-card h4{ font-size:0.85rem; font-weight:700; margin:0 0 7px; }
+  .exec-card p{ font-size:0.82rem; color:var(--text-1); line-height:1.55; margin:0; }
+
+  /* ============ generic table ============ */
+  .table-wrap{ border-radius:var(--radius-lg); overflow:hidden; }
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; }
+  table.rtable{ min-width:640px; }
+  thead tr{ background:var(--bg-2); }
+  th{ text-align:left; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-2); font-weight:700; padding:12px 16px; border-bottom:1px solid var(--border); }
+  td{ padding:12px 16px; font-size:0.84rem; color:var(--text-1); border-bottom:1px solid var(--border); vertical-align:top; }
+  tbody tr:hover{ background:var(--bg-2); }
+  tbody tr:last-child td{ border-bottom:none; }
+  td.strong-cell{ color:var(--text-0); font-weight:600; }
+
+  /* ============ Section 3: Persona ============ */
+  .persona-card{ display:flex; gap:22px; padding:26px; }
+  @media (max-width:680px){ .persona-card{ flex-direction:column; } }
+  .persona-avatar{ width:72px;height:72px;border-radius:18px; flex-shrink:0; background:linear-gradient(145deg, var(--primary), #93c5fd); display:flex; align-items:center; justify-content:center; font-size:1.9rem; }
+  .persona-info h4{ font-size:1.1rem; margin:0 0 2px; font-family:'Plus Jakarta Sans', sans-serif; }
+  .persona-role{ font-size:0.84rem; color:var(--primary); font-weight:600; margin-bottom:14px; }
+  .persona-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px){ .persona-grid{ grid-template-columns:1fr; } }
+  .pd-block .pd-label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-2); font-weight:700; margin-bottom:3px; }
+  .pd-block .pd-value{ font-size:0.83rem; color:var(--text-1); line-height:1.5; }
+
+  /* ============ Section 5: Customer journey ============ */
+  .journey-grid{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:14px; }
+  @media (max-width:880px){ .journey-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .journey-grid{ grid-template-columns:1fr; } }
+  .journey-card{ padding:18px; position:relative; }
+  .journey-card .jc-num{ width:26px;height:26px;border-radius:50%; background:var(--primary); color:#fff; font-size:0.76rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+  .journey-card h5{ font-size:0.92rem; margin:0 0 12px; }
+  .journey-card .jc-field{ margin-bottom:9px; }
+  .journey-card .jc-field-label{ font-size:0.66rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-2); font-weight:700; margin-bottom:2px; }
+  .journey-card .jc-field-value{ font-size:0.78rem; color:var(--text-1); line-height:1.45; }
+  .journey-arrow{ display:none; }
+  @media (min-width:881px){
+    .journey-card:not(:last-child)::after{ content:"→"; position:absolute; right:-22px; top:18px; color:var(--text-2); font-size:1rem; }
+  }
+
+  /* ============ Section 6/7: objection/trigger cards ============ */
+  .card-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+  @media (max-width:980px){ .card-grid{ grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:620px){ .card-grid{ grid-template-columns:1fr 1fr; } }
+  .mini-card{ padding:16px; text-align:center; }
+  .mini-card .mc-icon{ font-size:1.4rem; margin-bottom:8px; }
+  .mini-card .mc-title{ font-weight:700; font-size:0.84rem; margin-bottom:6px; }
+  .mini-card .mc-desc{ font-size:0.74rem; color:var(--text-2); line-height:1.45; }
+
+  /* ============ Section 8: MVP recommendation ============ */
+  .mvp-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+  @media (max-width:680px){ .mvp-grid{ grid-template-columns:1fr; } }
+  .mvp-block{ padding:20px; }
+  .mvp-block.build{ border-left:3px solid var(--success); }
+  .mvp-block.skip{ border-left:3px solid var(--danger); }
+  .mvp-block h4{ font-size:0.88rem; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+  .mvp-block ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .mvp-block ul li{ font-size:0.82rem; color:var(--text-1); line-height:1.5; padding-left:16px; position:relative; }
+  .mvp-block ul li::before{ content:"—"; position:absolute; left:0; color:var(--text-2); }
+
+  /* ============ Section 9: MoSCoW kanban ============ */
+  .kanban-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  @media (max-width:980px){ .kanban-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:560px){ .kanban-grid{ grid-template-columns:1fr; } }
+  .kanban-col{ padding:14px; border-radius:var(--radius-md); min-height:120px; }
+  .kanban-col.must{ background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.25); }
+  .kanban-col.should{ background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.25); }
+  .kanban-col.could{ background:rgba(37,99,235,0.05); border:1px solid rgba(37,99,235,0.25); }
+  .kanban-col.wont{ background:rgba(100,116,139,0.07); border:1px solid rgba(100,116,139,0.25); }
+  .kanban-col-head{ font-weight:800; font-size:0.8rem; margin-bottom:10px; }
+  .kanban-card{ background:var(--bg-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-size:0.79rem; color:var(--text-1); margin-bottom:8px; line-height:1.4; }
+
+  /* ============ Section 10: pricing cards ============ */
+  .pricing-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  @media (max-width:980px){ .pricing-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:560px){ .pricing-grid{ grid-template-columns:1fr; } }
+  .price-card{ padding:22px 20px; display:flex; flex-direction:column; gap:14px; position:relative; }
+  .price-card.featured{ border:1.5px solid var(--primary); }
+  .price-card .pc-badge{ position:absolute; top:-10px; right:16px; background:var(--primary); color:#fff; font-size:0.65rem; font-weight:700; padding:3px 10px; border-radius:999px; }
+  .price-card .pc-tier{ font-size:0.82rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.05em; }
+  .price-card .pc-price{ font-family:'JetBrains Mono', monospace; font-size:1.8rem; font-weight:800; color:var(--text-0); }
+  .price-card .pc-price span{ font-size:0.8rem; color:var(--text-2); font-weight:400; }
+  .price-card ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px; flex:1; }
+  .price-card ul li{ font-size:0.78rem; color:var(--text-1); padding-left:18px; position:relative; }
+  .price-card ul li::before{ content:"✓"; position:absolute; left:0; color:var(--success); font-weight:700; }
+
+  /* ============ Section 11: risk matrix ============ */
+  .risk-row{ display:grid; grid-template-columns:1fr 90px 90px 1.4fr; gap:14px; align-items:center; padding:13px 16px; border-radius:var(--radius-md); }
+  @media (max-width:760px){ .risk-row{ grid-template-columns:1fr; gap:6px; } }
+  .risk-name{ font-weight:700; font-size:0.84rem; }
+
+  .bubble-chart-wrap{ display:flex; justify-content:center; padding:10px 0; }
+
+  /* ============ Section 12: 30-day roadmap ============ */
+  .week-block{ margin-bottom:16px; }
+  .week-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; font-family:'Plus Jakarta Sans', sans-serif; font-size:0.98rem; font-weight:800; }
+  .week-chip{ font-family:'JetBrains Mono', monospace; font-size:0.68rem; background:var(--bg-2); border-radius:6px; padding:3px 9px; color:var(--text-1); }
+  .milestone-row{ display:flex; align-items:center; gap:12px; padding:11px 16px; border-radius:var(--radius-sm); background:var(--bg-2); border:1px solid var(--border); margin-bottom:7px; font-size:0.82rem; }
+  .milestone-row .ms-dot{ width:8px;height:8px;border-radius:50%; background:var(--primary); flex-shrink:0; }
+
+  /* ============ Section 13: action checklist ============ */
+  .checklist{ display:flex; flex-direction:column; gap:8px; }
+  .check-row{ display:flex; align-items:flex-start; gap:12px; padding:13px 16px; border-radius:var(--radius-md); background:var(--bg-2); border:1px solid var(--border); cursor:pointer; transition:all .15s ease; }
+  .check-row:hover{ border-color:var(--primary-line); }
+  .check-row.checked{ opacity:0.55; }
+  .check-row.checked .check-text{ text-decoration:line-through; }
+  .check-box{ width:20px;height:20px;border-radius:6px; border:2px solid var(--border-soft); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; transition:all .15s ease; }
+  .check-row.checked .check-box{ background:var(--primary); border-color:var(--primary); color:#fff; }
+  .check-text{ font-size:0.85rem; color:var(--text-1); line-height:1.5; }
+
+  /* ============ Section 14: gauges ============ */
+  .gauge-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  @media (max-width:880px){ .gauge-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .gauge-grid{ grid-template-columns:1fr; } }
+  .gauge-card{ padding:22px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .gauge-card .gc-label{ font-size:0.78rem; font-weight:700; color:var(--text-1); text-align:center; }
+  .gauge-wrap{ position:relative; width:130px; height:130px; }
+  .gauge-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .gauge-track{ fill:none; stroke:var(--border); stroke-width:10; }
+  .gauge-fill{ fill:none; stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1.3s cubic-bezier(.16,1,.3,1); }
+  .gauge-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .gauge-num{ font-family:'JetBrains Mono', monospace; font-size:1.7rem; font-weight:800; }
+
+  /* radar */
+  .radar-box{ display:flex; justify-content:center; padding:10px 0; position:relative; }
+  .svg-tooltip{
+    position:absolute; pointer-events:none; background:var(--dark); color:#fff;
+    border-radius:8px; padding:7px 11px; font-size:0.74rem; opacity:0; transition:opacity .12s ease;
+    z-index:10; white-space:nowrap; transform:translate(-50%,-110%);
+  }
+  .svg-tooltip.show{ opacity:1; }
+
+  /* ============ Section 15: verdict ============ */
+  .verdict-wrap{ padding:38px; text-align:center; }
+  .verdict-badge-xl{ display:inline-flex; align-items:center; gap:10px; font-family:'Plus Jakarta Sans', sans-serif; font-size:1.5rem; font-weight:800; padding:16px 34px; border-radius:999px; margin-bottom:16px; }
+  .verdict-sub{ font-size:0.88rem; color:var(--text-1); max-width:520px; margin:0 auto; line-height:1.6; }
+
+  /* ============ export bar ============ */
+  .export-bar{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  .report-footer{ text-align:center; padding:30px 0 10px; font-size:0.76rem; color:var(--text-2); }
+
+  .reveal{ opacity:0; transform:translateY(14px); transition:opacity .5s ease, transform .5s ease; }
+  .reveal.visible{ opacity:1; transform:translateY(0); }
+
+  @media (max-width:900px){
+    .sidebar{ position:fixed; left:0; transform:translateX(-100%); box-shadow:0 0 40px rgba(0,0,0,0.3); }
+    .sidebar.open{ transform:translateX(0); }
+    .sidebar-toggle-mobile{ display:flex; }
+    .report-container{ padding:24px 16px 80px; }
+    .topbar{ padding:14px 18px 14px 64px; }
+  }
+
+  @media print{
+    .sidebar, .topbar, .sidebar-toggle-mobile, .export-bar, .check-box{ display:none !important; }
+    body{ background:#fff; color:#000; }
+    .glass{ background:#fff; border:1px solid #ccc; box-shadow:none; }
+    .rsection{ break-inside:avoid; }
+    .rsection.collapsed .rsection-body{ display:block !important; }
+    .report-container{ max-width:100%; padding:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="intake-theme-toggle" id="intakeThemeToggle" title="Toggle dark mode">🌙</div>
+
+<!-- ════════════════════════════════════════════
+     INTAKE SCREEN
+════════════════════════════════════════════ -->
+<div id="intakeScreen">
+  <div class="intake-shell">
+    <div class="intake-brand">
+      <div class="brand-mark"></div>
+      <span>MVP Blueprint Generator</span>
+    </div>
+
+    <div class="glass intake-card">
+
+      <!-- CHOICE STEP -->
+      <div id="choiceStep">
+        <h1>Customer &amp; MVP Blueprint Generator</h1>
+        <p class="intake-sub">Turn a validated idea into a complete customer profile, MVP scope, and 30-day plan — entirely in your browser.</p>
+        <p class="intake-sub" style="margin-bottom:18px;font-weight:700;color:var(--text-0);">Do you already have a Startup Validation Report?</p>
+        <div class="choice-row">
+          <div class="choice-card" id="choiceYes">
+            <div class="cc-icon">📋</div>
+            <div class="cc-title">Yes</div>
+            <div class="cc-sub">Paste an existing report and we'll extract the details</div>
+          </div>
+          <div class="choice-card" id="choiceNo">
+            <div class="cc-icon">✍️</div>
+            <div class="cc-title">No</div>
+            <div class="cc-sub">Answer a short form instead</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASTE PANEL -->
+      <div class="intake-panel" id="pastePanel">
+        <div class="back-link" data-back="choiceStep">← Back</div>
+        <h1 style="font-size:1.3rem;">Paste Your Validation Report</h1>
+        <p class="intake-sub" style="margin-bottom:4px;">Paste the full text of your existing report below. We'll automatically extract the idea, problem, customers, competitors, and validation signals.</p>
+        <div class="field-group">
+          <label>Paste Startup Validation Report</label>
+          <textarea class="big" id="pasteInput" placeholder="Paste your full validation report text here…"></textarea>
+        </div>
+        <div class="extract-preview" id="extractPreview"></div>
+        <button class="btn btn-primary" id="extractBtn">🔍 Extract &amp; Generate Report</button>
+      </div>
+
+      <!-- FORM PANEL -->
+      <div class="intake-panel" id="formPanel">
+        <div class="back-link" data-back="choiceStep">← Back</div>
+        <h1 style="font-size:1.3rem;">Tell Us About Your Startup</h1>
+        <p class="intake-sub" style="margin-bottom:4px;">A few quick questions to generate your blueprint.</p>
+
+        <div class="field-group">
+          <label>Startup Idea</label>
+          <textarea id="formIdea" placeholder="e.g. A marketplace connecting independent farmers directly with restaurants"></textarea>
+        </div>
+        <div class="field-group">
+          <label>Problem Being Solved</label>
+          <textarea id="formProblem" placeholder="e.g. Restaurants overpay through middlemen; farmers get a fraction of retail price"></textarea>
+        </div>
+        <div class="field-group">
+          <label>Target Customers</label>
+          <textarea id="formCustomers" placeholder="e.g. Independent restaurant owners in mid-sized cities"></textarea>
+        </div>
+        <div class="field-group">
+          <label>Existing Validation</label>
+          <textarea id="formValidation" placeholder="e.g. 20 signups on waitlist, 3 verbal partnership commitments — or 'none yet'"></textarea>
+        </div>
+        <div class="field-group">
+          <label>Market / Country</label>
+          <input type="text" id="formMarket" placeholder="e.g. United States, India, Southeast Asia">
+        </div>
+
+        <button class="btn btn-primary" id="formGenerateBtn">✨ Generate Blueprint Report</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     APP SCREEN (report)
+════════════════════════════════════════════ -->
+<div class="sidebar-toggle-mobile" id="sidebarToggleMobile">☰</div>
+
+<div id="appScreen">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark"></div>
+      <span>Blueprint</span>
+    </div>
+
+    <div class="sidebar-search">
+      <span>🔍</span>
+      <input type="text" id="reportSearch" placeholder="Search report…">
+    </div>
+
+    <div class="sidebar-nav" id="sidebarNav">
+      <div class="nav-item" data-jump="sec1"><span class="nav-num">01</span>Executive Summary</div>
+      <div class="nav-item" data-jump="sec2"><span class="nav-num">02</span>Ideal Customer Profile</div>
+      <div class="nav-item" data-jump="sec3"><span class="nav-num">03</span>Buyer Persona</div>
+      <div class="nav-item" data-jump="sec4"><span class="nav-num">04</span>Top 10 Pain Points</div>
+      <div class="nav-item" data-jump="sec5"><span class="nav-num">05</span>Customer Journey</div>
+      <div class="nav-item" data-jump="sec6"><span class="nav-num">06</span>Key Objections</div>
+      <div class="nav-item" data-jump="sec7"><span class="nav-num">07</span>Buying Triggers</div>
+      <div class="nav-item" data-jump="sec8"><span class="nav-num">08</span>MVP Recommendation</div>
+      <div class="nav-item" data-jump="sec9"><span class="nav-num">09</span>MoSCoW Board</div>
+      <div class="nav-item" data-jump="sec10"><span class="nav-num">10</span>Pricing Hypothesis</div>
+      <div class="nav-item" data-jump="sec11"><span class="nav-num">11</span>Top 5 Risks</div>
+      <div class="nav-item" data-jump="sec12"><span class="nav-num">12</span>30-Day Plan</div>
+      <div class="nav-item" data-jump="sec13"><span class="nav-num">13</span>Action Sheet</div>
+      <div class="nav-item" data-jump="sec14"><span class="nav-num">14</span>Scores</div>
+      <div class="nav-item" data-jump="sec15"><span class="nav-num">15</span>Final Verdict</div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="theme-toggle-row">
+        <span>🌙 Dark Mode</span>
+        <div class="theme-switch" id="themeSwitch"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="editAnswersBtn">✎ Edit Inputs</button>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="topbar">
+      <h1 id="topbarTitle">Customer &amp; MVP Blueprint</h1>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" id="printBtn">🖨 Print</button>
+        <button class="btn btn-ghost btn-sm" id="exportMdBtn">⬇ Markdown</button>
+        <button class="btn btn-ghost btn-sm" id="exportJsonBtn">⬇ JSON</button>
+        <button class="btn btn-ghost btn-sm" id="exportHtmlBtn">⬇ HTML</button>
+      </div>
+    </div>
+
+    <div class="report-container" id="reportContainer">
+
+      <!-- ============ SECTION 1: Executive Summary ============ -->
+      <section class="rsection" id="sec1">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">01</span>
+            <div><div class="rsection-title">Executive Summary</div><div class="rsection-sub">A high-level synthesis of the idea, problem, opportunity, and market.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="exec-grid">
+            <div class="glass exec-card"><div class="ec-icon" style="background:var(--primary-dim);color:var(--primary);">◎</div><h4>Startup Idea</h4><p id="execIdea">—</p></div>
+            <div class="glass exec-card"><div class="ec-icon" style="background:var(--danger-dim);color:var(--danger);">⚠</div><h4>Problem</h4><p id="execProblem">—</p></div>
+            <div class="glass exec-card"><div class="ec-icon" style="background:var(--success-dim);color:var(--success);">▲</div><h4>Opportunity</h4><p id="execOpportunity">—</p></div>
+            <div class="glass exec-card"><div class="ec-icon" style="background:var(--warning-dim);color:var(--warning);">⬡</div><h4>Market Summary</h4><p id="execMarketSummary">—</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 2: ICP ============ -->
+      <section class="rsection" id="sec2">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">02</span>
+            <div><div class="rsection-title">Ideal Customer Profile</div><div class="rsection-sub">A structured snapshot of who you're building for.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="glass table-wrap">
+            <div class="table-scroll">
+              <table class="rtable">
+                <thead><tr><th>Attribute</th><th>Details</th></tr></thead>
+                <tbody id="icpBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 3: Buyer Persona ============ -->
+      <section class="rsection" id="sec3">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">03</span>
+            <div><div class="rsection-title">Buyer Persona</div><div class="rsection-sub">A representative individual to design and write copy for.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="glass persona-card">
+            <div class="persona-avatar">🧑‍💼</div>
+            <div class="persona-info">
+              <h4 id="personaName">—</h4>
+              <div class="persona-role" id="personaOccupation">—</div>
+              <div class="persona-grid">
+                <div class="pd-block"><div class="pd-label">Goals</div><div class="pd-value" id="personaGoals">—</div></div>
+                <div class="pd-block"><div class="pd-label">Frustrations</div><div class="pd-value" id="personaFrustrations">—</div></div>
+                <div class="pd-block"><div class="pd-label">Motivations</div><div class="pd-value" id="personaMotivations">—</div></div>
+                <div class="pd-block"><div class="pd-label">Buying Behaviour</div><div class="pd-value" id="personaBuying">—</div></div>
+                <div class="pd-block"><div class="pd-label">Decision Drivers</div><div class="pd-value" id="personaDrivers">—</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 4: Top 10 Pain Points ============ -->
+      <section class="rsection" id="sec4">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">04</span>
+            <div><div class="rsection-title">Top 10 Customer Pain Points</div><div class="rsection-sub">Ranked by estimated severity and business impact.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="glass table-wrap" style="margin-bottom:16px;">
+            <div class="table-scroll">
+              <table class="rtable">
+                <thead><tr><th>Rank</th><th>Pain Point</th><th>Severity</th><th>Impact</th></tr></thead>
+                <tbody id="painBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="glass" style="padding:20px;">
+            <svg id="painChartSvg" viewBox="0 0 600 280" width="100%" height="280" style="display:block;max-width:600px;margin:0 auto;"></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 5: Customer Journey ============ -->
+      <section class="rsection" id="sec5">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">05</span>
+            <div><div class="rsection-title">Customer Journey</div><div class="rsection-sub">Awareness → Consideration → Purchase → Retention, with actions, emotions, friction, and opportunities at each stage.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="journey-grid" id="journeyGrid"></div>
+          <div class="glass" style="padding:20px;margin-top:16px;">
+            <svg id="funnelSvg" viewBox="0 0 600 220" width="100%" height="220" style="display:block;max-width:600px;margin:0 auto;"></svg>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- ============ SECTION 6: Objections ============ -->
+      <section class="rsection" id="sec6">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">06</span>
+            <div><div class="rsection-title">Key Customer Objections</div><div class="rsection-sub">Common hesitations to plan messaging and sales responses around.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="card-grid" id="objectionGrid"></div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 7: Triggers ============ -->
+      <section class="rsection" id="sec7">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">07</span>
+            <div><div class="rsection-title">Key Buying Triggers</div><div class="rsection-sub">What pushes a prospect from "interested" to "buying."</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="card-grid" id="triggerGrid"></div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 8: MVP Recommendation ============ -->
+      <section class="rsection" id="sec8">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">08</span>
+            <div><div class="rsection-title">MVP Recommendation</div><div class="rsection-sub">What to build first, what to deliberately leave out, and how to measure early success.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="mvp-grid">
+            <div class="glass mvp-block build"><h4>✅ Build First</h4><ul id="mvpBuild"></ul></div>
+            <div class="glass mvp-block skip"><h4>🚫 Do Not Build Yet</h4><ul id="mvpSkip"></ul></div>
+          </div>
+          <div class="glass table-wrap">
+            <div class="table-scroll">
+              <table class="rtable">
+                <thead><tr><th>Success Metric</th><th>Target</th><th>Why It Matters</th></tr></thead>
+                <tbody id="metricsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 9: MoSCoW ============ -->
+      <section class="rsection" id="sec9">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">09</span>
+            <div><div class="rsection-title">MoSCoW Prioritization</div><div class="rsection-sub">Feature scope, organised by priority tier.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="kanban-grid">
+            <div class="kanban-col must"><div class="kanban-col-head">🔴 Must Have</div><div id="moscowMust"></div></div>
+            <div class="kanban-col should"><div class="kanban-col-head">🟠 Should Have</div><div id="moscowShould"></div></div>
+            <div class="kanban-col could"><div class="kanban-col-head">🔵 Could Have</div><div id="moscowCould"></div></div>
+            <div class="kanban-col wont"><div class="kanban-col-head">⚪ Won't Have</div><div id="moscowWont"></div></div>
+          </div>
+          <div class="glass" style="padding:20px;margin-top:16px;">
+            <svg id="priorityChartSvg" viewBox="0 0 600 260" width="100%" height="260" style="display:block;max-width:600px;margin:0 auto;"></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 10: Pricing ============ -->
+      <section class="rsection" id="sec10">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">10</span>
+            <div><div class="rsection-title">Pricing Hypothesis</div><div class="rsection-sub">A starting tier structure to test with early customers.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="pricing-grid" id="pricingGrid"></div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 11: Risk Matrix ============ -->
+      <section class="rsection" id="sec11">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">11</span>
+            <div><div class="rsection-title">Top 5 Risks</div><div class="rsection-sub">The risks most likely to derail this venture, with mitigation steps.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;" id="riskList"></div>
+          <div class="glass bubble-chart-wrap">
+            <svg id="bubbleChartSvg" viewBox="0 0 600 320" width="100%" height="320" style="display:block;max-width:600px;"></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 12: 30-Day Plan ============ -->
+      <section class="rsection" id="sec12">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">12</span>
+            <div><div class="rsection-title">30-Day MVP Plan</div><div class="rsection-sub">A week-by-week roadmap from zero to a testable MVP.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body" id="roadmapBody"></div>
+      </section>
+
+      <!-- ============ SECTION 13: Action Sheet ============ -->
+      <section class="rsection" id="sec13">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">13</span>
+            <div><div class="rsection-title">Founder Action Sheet</div><div class="rsection-sub">Your top 10 next actions. Check them off as you go — saved locally in your browser.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="checklist" id="actionChecklist"></div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 14: Scores ============ -->
+      <section class="rsection" id="sec14">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">14</span>
+            <div><div class="rsection-title">Scores</div><div class="rsection-sub">Four composite scores summarising how validated and buildable this idea is right now.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="gauge-grid" id="gaugeGrid" style="margin-bottom:20px;"></div>
+          <div class="glass radar-box">
+            <svg id="radarSvg" viewBox="0 0 340 340" width="320" height="320"></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 15: Final Verdict ============ -->
+      <section class="rsection" id="sec15">
+        <div class="rsection-head">
+          <div class="rsection-head-left">
+            <span class="rsection-num">15</span>
+            <div><div class="rsection-title">Final Verdict</div><div class="rsection-sub">A single synthesised read on demand signal, based on every score above.</div></div>
+          </div>
+          <span class="collapse-chevron">▼</span>
+        </div>
+        <div class="rsection-body">
+          <div class="glass verdict-wrap">
+            <div class="verdict-badge-xl" id="verdictBadge">—</div>
+            <p class="verdict-sub" id="verdictExplain">—</p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="report-footer">
+        Customer &amp; MVP Blueprint Report · Generated entirely client-side from your inputs · All severity, pricing, and scoring figures are estimates, not market research
+      </footer>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     STATE
+  ============================================================ */
+  var data = {
+    idea:"", problem:"", customers:"", validationText:"", market:"",
+    competitors:[]
+  };
+
+  var STORAGE_KEY = "mvpBlueprintData_v1";
+  var CHECKLIST_KEY = "mvpBlueprintChecklist_v1";
+
+  /* ============================================================
+     THEME
+  ============================================================ */
+  function applyTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    try{ localStorage.setItem("mvpBlueprintTheme", theme); } catch(e){}
+    document.getElementById("intakeThemeToggle").textContent = theme === "dark" ? "☀️" : "🌙";
+  }
+  (function initTheme(){
+    var saved = "light";
+    try{ saved = localStorage.getItem("mvpBlueprintTheme") || "light"; } catch(e){}
+    applyTheme(saved);
+  })();
+
+  document.getElementById("intakeThemeToggle").addEventListener("click", function(){
+    var current = document.documentElement.getAttribute("data-theme");
+    applyTheme(current === "dark" ? "light" : "dark");
+  });
+  document.getElementById("themeSwitch").addEventListener("click", function(){
+    var current = document.documentElement.getAttribute("data-theme");
+    applyTheme(current === "dark" ? "light" : "dark");
+  });
+
+  /* ============================================================
+     INTAKE NAVIGATION
+  ============================================================ */
+  var choiceStep = document.getElementById("choiceStep");
+  var pastePanel = document.getElementById("pastePanel");
+  var formPanel = document.getElementById("formPanel");
+
+  function showIntakePanel(panel){
+    choiceStep.style.display = "none";
+    pastePanel.classList.remove("active");
+    formPanel.classList.remove("active");
+    if(panel === "choice") choiceStep.style.display = "block";
+    if(panel === "paste") pastePanel.classList.add("active");
+    if(panel === "form") formPanel.classList.add("active");
+  }
+
+  document.getElementById("choiceYes").addEventListener("click", function(){ showIntakePanel("paste"); });
+  document.getElementById("choiceNo").addEventListener("click", function(){ showIntakePanel("form"); });
+  document.querySelectorAll("[data-back]").forEach(function(el){
+    el.addEventListener("click", function(){ showIntakePanel("choice"); });
+  });
+
+  /* ============================================================
+     EXTRACTION FROM PASTED REPORT
+  ============================================================ */
+  function extractFromText(raw){
+    var text = raw || "";
+    var lines = text.split("\n");
+
+    function findAfterLabel(labels){
+      for(var i=0;i<lines.length;i++){
+        var line = lines[i];
+        for(var L=0;L<labels.length;L++){
+          var label = labels[L];
+          var re = new RegExp("^\\s*\\**\\s*" + label + "\\s*\\**\\s*[:\\-]?\\s*(.*)$", "i");
+          var m = line.match(re);
+          if(m && m[1] && m[1].trim().length > 2){
+            return m[1].trim();
+          }
+          // label on its own line, content follows on next non-empty line
+          var labelOnly = new RegExp("^\\s*\\**\\s*" + label + "\\s*\\**\\s*[:\\-]?\\s*$", "i");
+          if(labelOnly.test(line)){
+            for(var j=i+1;j<lines.length;j++){
+              var nxt = lines[j].trim();
+              if(nxt.length > 2 && !/^[#*\-=\s]*$/.test(nxt)) return nxt.replace(/^[\-\*\•]\s*/,"");
+            }
+          }
+        }
+      }
+      return "";
+    }
+
+    var idea = findAfterLabel(["Startup Idea","Idea","Opportunity Overview","Solution"]);
+    var problem = findAfterLabel(["Problem Being Solved","Problem","The Problem"]);
+    var customers = findAfterLabel(["Target Customers","Target Customer","Customers","Ideal Customer"]);
+    var competitorsRaw = findAfterLabel(["Competitors","Competition","Competitor"]);
+    var validation = findAfterLabel(["Existing Validation","Validation","Traction","Key Findings"]);
+    var market = findAfterLabel(["Target Market","Market","Market / Country","Country"]);
+
+    var competitors = [];
+    if(competitorsRaw){
+      competitors = competitorsRaw.split(/[,;]+/).map(function(s){return s.trim();}).filter(Boolean).slice(0,6);
+    }
+
+    return {
+      idea: idea || "Not enough information provided.",
+      problem: problem || "Not enough information provided.",
+      customers: customers || "Not enough information provided.",
+      validationText: validation || "Not enough information provided.",
+      market: market || "Not enough information provided.",
+      competitors: competitors
+    };
+  }
+
+  document.getElementById("extractBtn").addEventListener("click", function(){
+    var raw = document.getElementById("pasteInput").value;
+    if(raw.trim().length < 20){
+      alert("Please paste a longer report — we need enough text to extract details.");
+      return;
+    }
+    var extracted = extractFromText(raw);
+    data = extracted;
+
+    var preview = document.getElementById("extractPreview");
+    preview.classList.add("show");
+    preview.innerHTML =
+      '<div class="ep-row"><span class="ep-label">Idea</span><span>' + escapeHtml(truncate(data.idea,90)) + '</span></div>' +
+      '<div class="ep-row"><span class="ep-label">Problem</span><span>' + escapeHtml(truncate(data.problem,90)) + '</span></div>' +
+      '<div class="ep-row"><span class="ep-label">Customers</span><span>' + escapeHtml(truncate(data.customers,90)) + '</span></div>' +
+      '<div class="ep-row"><span class="ep-label">Competitors</span><span>' + escapeHtml(data.competitors.length ? data.competitors.join(", ") : "None detected") + '</span></div>' +
+      '<div class="ep-row"><span class="ep-label">Validation</span><span>' + escapeHtml(truncate(data.validationText,90)) + '</span></div>';
+
+    setTimeout(function(){ generateReport(); }, 600);
+  });
+
+  document.getElementById("formGenerateBtn").addEventListener("click", function(){
+    var idea = document.getElementById("formIdea").value.trim();
+    var problem = document.getElementById("formProblem").value.trim();
+    var customers = document.getElementById("formCustomers").value.trim();
+    var validation = document.getElementById("formValidation").value.trim();
+    var market = document.getElementById("formMarket").value.trim();
+
+    if(idea.length < 5 || problem.length < 5 || customers.length < 3){
+      alert("Please fill in at least the idea, problem, and target customers.");
+      return;
+    }
+
+    data = {
+      idea: idea || "Not enough information provided.",
+      problem: problem || "Not enough information provided.",
+      customers: customers || "Not enough information provided.",
+      validationText: validation || "Not enough information provided.",
+      market: market || "Not enough information provided.",
+      competitors: []
+    };
+    generateReport();
+  });
+
+  function escapeHtml(str){
+    var div = document.createElement("div");
+    div.textContent = str == null ? "" : str;
+    return div.innerHTML;
+  }
+  function truncate(str, n){
+    str = str || "";
+    return str.length > n ? str.slice(0,n) + "…" : str;
+  }
+  function wordCount(str){ return (str||"").trim().split(/\s+/).filter(Boolean).length; }
+  function clamp(n,lo,hi){ return Math.max(lo, Math.min(hi, n)); }
+
+  /* ============================================================================
+     ANALYSIS ENGINE
+  ============================================================================ */
+  function hasValidation(){
+    var t = (data.validationText || "").toLowerCase();
+    return t.length > 0 && t.indexOf("not enough") === -1 && t.indexOf("none yet") === -1 && t.indexOf("none.") === -1 && t !== "none";
+  }
+
+  function scoreScores(){
+    var customerClarity = clamp(30 + wordCount(data.customers)*5, 15, 95);
+    var problemSeverity = clamp(30 + wordCount(data.problem)*5, 15, 95);
+    var pmfPotential = clamp((hasValidation()?25:0) + wordCount(data.idea)*3 + wordCount(data.problem)*2, 15, 95);
+    var mvpReadiness = clamp(35 + wordCount(data.idea)*4 + (hasValidation()?15:0), 15, 95);
+    return {
+      customerClarity: Math.round(customerClarity),
+      problemSeverity: Math.round(problemSeverity),
+      pmfPotential: Math.round(pmfPotential),
+      mvpReadiness: Math.round(mvpReadiness)
+    };
+  }
+
+  function scoreColor(v){
+    if(v < 40) return "#ef4444";
+    if(v < 70) return "#f59e0b";
+    return "#10b981";
+  }
+  function scoreLabel(v){
+    if(v < 40) return "Needs Work";
+    if(v < 70) return "Developing";
+    return "Strong";
+  }
+
+  function buildPainPoints(){
+    var base = data.problem || "the core problem";
+    var customer = data.customers || "your target customer";
+    var pool = [
+      { point: "Direct cost/time lost: " + truncate(base,50), severity: 92 },
+      { point: "No dedicated solution exists for " + truncate(customer,40), severity: 85 },
+      { point: "Manual workarounds are error-prone and slow", severity: 80 },
+      { point: "Switching cost from current habits/tools", severity: 68 },
+      { point: "Lack of trust in new/unproven solutions", severity: 64 },
+      { point: "Price sensitivity in this segment", severity: 60 },
+      { point: "Limited awareness that a better way exists", severity: 55 },
+      { point: "Onboarding friction with new tools generally", severity: 48 },
+      { point: "Fragmented current solutions (multiple tools needed)", severity: 44 },
+      { point: "Minor UI/UX frustration with status quo tools", severity: 35 }
+    ];
+    return pool.sort(function(a,b){return b.severity-a.severity;});
+  }
+
+  function severityBadge(v){
+    if(v >= 70) return { cls:"badge-high", label:"High" };
+    if(v >= 45) return { cls:"badge-medium", label:"Medium" };
+    return { cls:"badge-low", label:"Low" };
+  }
+
+  function buildJourney(){
+    var problem = truncate(data.problem, 60);
+    var competitor = data.competitors[0] || "current workarounds";
+    return [
+      { stage:"Awareness", actions:"Realizes they have: " + problem, emotions:"Frustrated, searching", friction:"Doesn't know a dedicated solution exists", opportunity:"SEO/content addressing this exact problem" },
+      { stage:"Consideration", actions:"Compares options including " + competitor, emotions:"Skeptical, evaluating", friction:"Hard to tell which option fits their specific case", opportunity:"Clear positioning vs. " + competitor },
+      { stage:"Purchase", actions:"Commits to a trial or paid plan", emotions:"Cautiously optimistic", friction:"Price or commitment-level objections", opportunity:"Low-risk entry tier or free trial" },
+      { stage:"Retention", actions:"Uses product regularly, evaluates ongoing value", emotions:"Relief if it works, frustration if not", friction:"Habit formation; risk of reverting to old methods", opportunity:"Onboarding + early wins to cement the habit" }
+    ];
+  }
+
+  function buildObjections(){
+    return [
+      { icon:"💰", title:"Price", desc:"\"Is this worth paying for?\"" },
+      { icon:"🛡️", title:"Trust", desc:"\"Can I rely on a new/unproven product?\"" },
+      { icon:"⏱️", title:"Time", desc:"\"Do I have time to learn/switch?\"" },
+      { icon:"🧩", title:"Complexity", desc:"\"Will this be hard to use?\"" },
+      { icon:"🔄", title:"Switching Costs", desc:"\"What do I lose by switching from " + (data.competitors[0] || "what I use now") + "?\"" }
+    ];
+  }
+
+  function buildTriggers(){
+    return [
+      { icon:"⏳", title:"Saving Time", desc:"Removes manual steps from " + truncate(data.problem,40) },
+      { icon:"💵", title:"Saving Money", desc:"Cheaper than current alternative or workaround" },
+      { icon:"📈", title:"Better Results", desc:"Outcomes superior to status quo" },
+      { icon:"⭐", title:"Social Proof", desc:"Peers or similar businesses already using it" },
+      { icon:"🎯", title:"Convenience", desc:"Simpler, faster path to the same outcome" }
+    ];
+  }
+
+  function buildMoscow(){
+    return {
+      must: ["Core workflow solving: " + truncate(data.problem,50), "Basic account/auth", "The one feature that delivers the core value prop"],
+      should: ["Onboarding flow", "Basic analytics/usage tracking", "Email notifications"],
+      could: ["Integrations with adjacent tools", "Advanced customization", "Team/collaboration features"],
+      wont: ["Enterprise SSO (until traction proven)", "Native mobile app (until web validated)", "White-labeling / multi-tenant support"]
+    };
+  }
+
+  function buildRisks(scores){
+    return [
+      { risk:"Customer demand is weaker than assumed", probability: 100-scores.pmfPotential, impact:80, mitigation:"Run 10-15 customer interviews before building further" },
+      { risk:"MVP scope creeps beyond what's needed to test core hypothesis", probability:55, impact:65, mitigation:"Lock MoSCoW 'Must Have' list before writing code" },
+      { risk:"Pricing model doesn't match willingness to pay", probability:50, impact:60, mitigation:"Test pricing with 5 real prospects before finalizing" },
+      { risk:"Competing solution moves faster or has more resources", probability: data.competitors.length>0?60:30, impact:55, mitigation:"Focus on a niche incumbents underserve" },
+      { risk:"Founder/team lacks bandwidth to execute the 30-day plan", probability:40, impact:50, mitigation:"Time-box each week strictly; cut scope rather than slip dates" }
+    ];
+  }
+
+  function buildPricing(){
+    return [
+      { tier:"Free", price:"$0", period:"/mo", features:["Core feature, limited usage","Community support","1 user"] },
+      { tier:"Basic", price:"$19", period:"/mo", features:["Full core feature access","Email support","Up to 3 users"] },
+      { tier:"Pro", price:"$49", period:"/mo", features:["Everything in Basic","Priority support","Up to 10 users","Basic integrations"], featured:true },
+      { tier:"Enterprise", price:"Custom", period:"", features:["Everything in Pro","Dedicated support","Unlimited users","Custom integrations"] }
+    ];
+  }
+
+  function buildRoadmap(){
+    return [
+      { week:"Week 1", milestones:["Interview 10 potential customers","Finalize MVP 'Must Have' scope (Section 9)","Sketch core user flow"] },
+      { week:"Week 2", milestones:["Build core feature (the one in Section 8)","Set up basic analytics","Recruit 5 design partners"] },
+      { week:"Week 3", milestones:["Ship MVP to design partners","Collect structured feedback","Fix top 3 reported issues"] },
+      { week:"Week 4", milestones:["Test pricing hypothesis with real prospects","Decide go/no-go on current direction","Plan next 30 days based on data"] }
+    ];
+  }
+
+  function buildActionSheet(){
+    return [
+      "Interview 10 potential customers about " + truncate(data.problem,40),
+      "Write a one-sentence value proposition and test it on 5 people",
+      "Define the single 'Must Have' MVP feature (Section 9)",
+      "Set up a simple landing page with a waitlist or signup form",
+      "Identify and reach out to 5 potential design partners",
+      "Draft your pricing hypothesis and test it conversationally",
+      "Map your top competitor's strengths and weaknesses",
+      "Build the smallest version of the core feature",
+      "Set up basic usage analytics before launch",
+      "Schedule a go/no-go review for 30 days from today"
+    ];
+  }
+
+  function buildVerdict(scores){
+    var avg = Math.round((scores.customerClarity + scores.problemSeverity + scores.pmfPotential + scores.mvpReadiness) / 4);
+    if(avg >= 75) return { label:"🟢 Strong Demand Signal", cls:"badge-green", explain:"Across customer clarity, problem severity, PMF potential, and MVP readiness, this idea shows strong, consistent signal. Proceed to building and testing the MVP scoped in Section 8.", avg:avg };
+    if(avg >= 55) return { label:"🟡 Promising but Unvalidated", cls:"badge-yellow", explain:"There's a credible thesis here, but key scores are still moderate. Prioritize the customer interviews and validation steps in Section 13 before committing significant build time.", avg:avg };
+    if(avg >= 35) return { label:"🟠 Weak Demand Signal", cls:"badge-yellow", explain:"Multiple scores are on the lower end. Consider narrowing your target customer or problem statement, or explore the pivot directions before investing further.", avg:avg };
+    return { label:"🔴 Low Demand Probability", cls:"badge-red", explain:"Current inputs suggest significant gaps in customer clarity, problem severity, or validation. Revisit the fundamentals — talk to more customers — before building anything.", avg:avg };
+  }
+
+  /* ============================================================================
+     MAIN GENERATION
+  ============================================================================ */
+  var scoresCache, verdictCache, painCache, journeyCache, moscowCache, risksCache, roadmapCache, actionsCache, pricingCache, objectionsCache, triggersCache;
+
+  function generateReport(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
+
+    scoresCache = scoreScores();
+    verdictCache = buildVerdict(scoresCache);
+    painCache = buildPainPoints();
+    journeyCache = buildJourney();
+    moscowCache = buildMoscow();
+    risksCache = buildRisks(scoresCache);
+    roadmapCache = buildRoadmap();
+    actionsCache = buildActionSheet();
+    pricingCache = buildPricing();
+    objectionsCache = buildObjections();
+    triggersCache = buildTriggers();
+
+    renderSection1();
+    renderSection2();
+    renderSection3();
+    renderSection4();
+    renderSection5();
+    renderSection6();
+    renderSection7();
+    renderSection8();
+    renderSection9();
+    renderSection10();
+    renderSection11();
+    renderSection12();
+    renderSection13();
+    renderSection14();
+    renderSection15();
+
+    document.getElementById("intakeScreen").style.display = "none";
+    document.getElementById("appScreen").classList.add("active");
+    window.scrollTo(0,0);
+    setupReveal();
+  }
+
+  /* ---------- Section 1 ---------- */
+  function renderSection1(){
+    document.getElementById("execIdea").textContent = data.idea;
+    document.getElementById("execProblem").textContent = data.problem;
+    document.getElementById("execOpportunity").textContent = "A focused solution for " + data.customers + " addressing this problem directly, where " + (data.competitors.length ? "current options (" + data.competitors.join(", ") + ") leave gaps" : "no direct competitor was identified") + ".";
+    document.getElementById("execMarketSummary").textContent = "Target market: " + data.market + ". Validation so far: " + data.validationText;
+  }
+
+  /* ---------- Section 2: ICP ---------- */
+  function renderSection2(){
+    var rows = [
+      ["Industry", data.market !== "Not enough information provided." ? "Inferred from market: " + data.market : "Not enough information provided."],
+      ["Age Range", "Not enough information provided."],
+      ["Company Size", data.customers.toLowerCase().indexOf("business") > -1 || data.customers.toLowerCase().indexOf("compan") > -1 ? "Small to mid-sized (estimate)" : "Not enough information provided."],
+      ["Location", data.market],
+      ["Income / Budget", "Not enough information provided."],
+      ["Goals", "Solve: " + data.problem],
+      ["Challenges", data.problem]
+    ];
+    document.getElementById("icpBody").innerHTML = rows.map(function(r){
+      return "<tr><td class='strong-cell'>" + escapeHtml(r[0]) + "</td><td>" + escapeHtml(r[1]) + "</td></tr>";
+    }).join("");
+  }
+
+  /* ---------- Section 3: Persona ---------- */
+  function renderSection3(){
+    document.getElementById("personaName").textContent = "Jordan — Representative Buyer";
+    document.getElementById("personaOccupation").textContent = "Representative of: " + data.customers;
+    document.getElementById("personaGoals").textContent = "Solve " + truncate(data.problem,70) + " efficiently and affordably.";
+    document.getElementById("personaFrustrations").textContent = "Currently relies on " + (data.competitors[0] || "manual workarounds") + ", which doesn't fully solve the problem.";
+    document.getElementById("personaMotivations").textContent = "Save time, reduce cost, or reduce risk associated with the status quo.";
+    document.getElementById("personaBuying").textContent = "Likely tries a low-commitment option (trial/freemium) before paying.";
+    document.getElementById("personaDrivers").textContent = "Price relative to value, ease of adoption, trust signals like reviews.";
+  }
+
+  /* ---------- Section 4: Pain Points ---------- */
+  function renderSection4(){
+    var tbody = document.getElementById("painBody");
+    tbody.innerHTML = painCache.map(function(p,i){
+      var b = severityBadge(p.severity);
+      return "<tr><td class='strong-cell'>#" + (i+1) + "</td><td>" + escapeHtml(p.point) + "</td><td><span class='badge " + b.cls + "'>" + b.label + " (" + p.severity + ")</span></td><td>" + (p.severity>=70?"High business impact":p.severity>=45?"Moderate impact":"Low impact") + "</td></tr>";
+    }).join("");
+
+    buildPainChart();
+  }
+
+  function buildPainChart(){
+    var svg = document.getElementById("painChartSvg");
+    svg.innerHTML = "";
+    var ns = "http://www.w3.org/2000/svg";
+    var top = painCache.slice(0,10);
+    var w=600,h=280, pad=140, barH=20, gap=6;
+
+    top.forEach(function(p,i){
+      var y = 14 + i*(barH+gap);
+      var barW = (p.severity/100) * (w-pad-30);
+      var color = p.severity>=70?"#ef4444":p.severity>=45?"#f59e0b":"#10b981";
+
+      var label = document.createElementNS(ns,"text");
+      label.setAttribute("x", pad-8); label.setAttribute("y", y+barH/2+4);
+      label.setAttribute("text-anchor","end"); label.setAttribute("font-size","10");
+      label.setAttribute("fill","var(--text-1)"); label.setAttribute("font-family","Inter, sans-serif");
+      label.style.fill = "#64748b";
+      label.textContent = truncate(p.point, 24);
+      svg.appendChild(label);
+
+      var track = document.createElementNS(ns,"rect");
+      track.setAttribute("x", pad); track.setAttribute("y", y); track.setAttribute("width", w-pad-30); track.setAttribute("height", barH);
+      track.setAttribute("rx", 5); track.setAttribute("fill","rgba(100,116,139,0.12)");
+      svg.appendChild(track);
+
+      var bar = document.createElementNS(ns,"rect");
+      bar.setAttribute("x", pad); bar.setAttribute("y", y); bar.setAttribute("width", 0); bar.setAttribute("height", barH);
+      bar.setAttribute("rx", 5); bar.setAttribute("fill", color);
+      svg.appendChild(bar);
+      requestAnimationFrame(function(){ setTimeout(function(){ bar.setAttribute("width", barW); bar.style.transition="width 1s cubic-bezier(.16,1,.3,1)"; }, 80+i*40); });
+
+      var valText = document.createElementNS(ns,"text");
+      valText.setAttribute("x", pad + barW + 6); valText.setAttribute("y", y+barH/2+4);
+      valText.setAttribute("font-size","10"); valText.setAttribute("font-family","JetBrains Mono, monospace");
+      valText.style.fill = "#64748b";
+      valText.textContent = p.severity;
+      svg.appendChild(valText);
+    });
+  }
+
+  /* ---------- Section 5: Journey ---------- */
+  function renderSection5(){
+    var grid = document.getElementById("journeyGrid");
+    grid.innerHTML = journeyCache.map(function(j,i){
+      return '<div class="glass journey-card"><div class="jc-num">' + (i+1) + '</div><h5>' + j.stage + '</h5>' +
+        '<div class="jc-field"><div class="jc-field-label">Actions</div><div class="jc-field-value">' + escapeHtml(j.actions) + '</div></div>' +
+        '<div class="jc-field"><div class="jc-field-label">Emotions</div><div class="jc-field-value">' + escapeHtml(j.emotions) + '</div></div>' +
+        '<div class="jc-field"><div class="jc-field-label">Friction</div><div class="jc-field-value">' + escapeHtml(j.friction) + '</div></div>' +
+        '<div class="jc-field"><div class="jc-field-label">Opportunity</div><div class="jc-field-value">' + escapeHtml(j.opportunity) + '</div></div>' +
+        '</div>';
+    }).join("");
+
+    buildFunnel();
+  }
+
+  function buildFunnel(){
+    var svg = document.getElementById("funnelSvg");
+    svg.innerHTML = "";
+    var ns = "http://www.w3.org/2000/svg";
+    var stages = [
+      { label:"Awareness", pct:100, color:"#2563eb" },
+      { label:"Consideration", pct:55, color:"#3b82f6" },
+      { label:"Purchase", pct:22, color:"#10b981" },
+      { label:"Retention", pct:14, color:"#059669" }
+    ];
+    var w=600,h=220, topW=520, segH=46, cx=w/2;
+
+    stages.forEach(function(s,i){
+      var thisW = topW * (s.pct/100);
+      var nextPct = stages[i+1] ? stages[i+1].pct : s.pct*0.6;
+      var nextW = topW * (nextPct/100);
+      var y = 14 + i*segH;
+
+      var x1 = cx - thisW/2, x2 = cx + thisW/2;
+      var x3 = cx + nextW/2, x4 = cx - nextW/2;
+
+      var poly = document.createElementNS(ns,"polygon");
+      poly.setAttribute("points", x1+","+y+" "+x2+","+y+" "+x3+","+(y+segH-4)+" "+x4+","+(y+segH-4));
+      poly.setAttribute("fill", s.color);
+      poly.setAttribute("fill-opacity","0.85");
+      svg.appendChild(poly);
+
+      var label = document.createElementNS(ns,"text");
+      label.setAttribute("x", cx); label.setAttribute("y", y+segH/2+2);
+      label.setAttribute("text-anchor","middle"); label.setAttribute("fill","#fff");
+      label.setAttribute("font-size","11"); label.setAttribute("font-weight","700");
+      label.setAttribute("font-family","Inter, sans-serif");
+      label.textContent = s.label + " (" + s.pct + "%)";
+      svg.appendChild(label);
+    });
+  }
+
+  /* ---------- Section 6: Objections ---------- */
+  function renderSection6(){
+    document.getElementById("objectionGrid").innerHTML = objectionsCache.map(function(o){
+      return '<div class="glass mini-card"><div class="mc-icon">'+o.icon+'</div><div class="mc-title">'+o.title+'</div><div class="mc-desc">'+escapeHtml(o.desc)+'</div></div>';
+    }).join("");
+  }
+
+  /* ---------- Section 7: Triggers ---------- */
+  function renderSection7(){
+    document.getElementById("triggerGrid").innerHTML = triggersCache.map(function(t){
+      return '<div class="glass mini-card"><div class="mc-icon">'+t.icon+'</div><div class="mc-title">'+t.title+'</div><div class="mc-desc">'+escapeHtml(t.desc)+'</div></div>';
+    }).join("");
+  }
+
+  /* ---------- Section 8: MVP Recommendation ---------- */
+  function renderSection8(){
+    document.getElementById("mvpBuild").innerHTML =
+      "<li>The single feature that directly solves: " + escapeHtml(truncate(data.problem,60)) + "</li>" +
+      "<li>Minimal account/auth flow</li>" +
+      "<li>A way to capture usage signal (even manually at first)</li>";
+    document.getElementById("mvpSkip").innerHTML =
+      "<li>Advanced customization or settings</li>" +
+      "<li>Integrations with other tools (until core is validated)</li>" +
+      "<li>Scalability/infra work beyond what's needed for design partners</li>";
+
+    var metrics = [
+      ["Design partners onboarded", "5+", "Confirms initial reachability of target customer"],
+      ["Weekly active usage", "60%+ of partners", "Signals the core feature delivers real value"],
+      ["Qualitative feedback sessions", "10+", "Surfaces friction before wider launch"],
+      ["Willingness-to-pay signal", "3+ verbal/email commitments", "Tests pricing hypothesis from Section 10"]
+    ];
+    document.getElementById("metricsBody").innerHTML = metrics.map(function(m){
+      return "<tr><td class='strong-cell'>"+m[0]+"</td><td>"+m[1]+"</td><td>"+m[2]+"</td></tr>";
+    }).join("");
+  }
+
+  /* ---------- Section 9: MoSCoW ---------- */
+  function renderSection9(){
+    function fillCol(id, items){
+      document.getElementById(id).innerHTML = items.map(function(i){ return '<div class="kanban-card">'+escapeHtml(i)+'</div>'; }).join("");
+    }
+    fillCol("moscowMust", moscowCache.must);
+    fillCol("moscowShould", moscowCache.should);
+    fillCol("moscowCould", moscowCache.could);
+    fillCol("moscowWont", moscowCache.wont);
+
+    buildPriorityChart();
+  }
+
+  function buildPriorityChart(){
+    var svg = document.getElementById("priorityChartSvg");
+    svg.innerHTML = "";
+    var ns = "http://www.w3.org/2000/svg";
+    var cats = [
+      { label:"Must Have", count: moscowCache.must.length, color:"#ef4444" },
+      { label:"Should Have", count: moscowCache.should.length, color:"#f59e0b" },
+      { label:"Could Have", count: moscowCache.could.length, color:"#2563eb" },
+      { label:"Won't Have", count: moscowCache.wont.length, color:"#94a3b8" }
+    ];
+    var w=600,h=260, pad=50, barW=80, gap=40, maxCount = Math.max.apply(null, cats.map(function(c){return c.count;})) || 1;
+    var chartH = h-80;
+
+    cats.forEach(function(c,i){
+      var x = pad + i*(barW+gap);
+      var barH = (c.count/maxCount) * chartH;
+      var y = h-50-barH;
+
+      var bar = document.createElementNS(ns,"rect");
+      bar.setAttribute("x", x); bar.setAttribute("y", h-50); bar.setAttribute("width", barW); bar.setAttribute("height", 0);
+      bar.setAttribute("rx", 8); bar.setAttribute("fill", c.color); bar.setAttribute("fill-opacity","0.85");
+      svg.appendChild(bar);
+      requestAnimationFrame(function(){ setTimeout(function(){
+        bar.setAttribute("y", y); bar.setAttribute("height", barH);
+        bar.style.transition="y 1s cubic-bezier(.16,1,.3,1), height 1s cubic-bezier(.16,1,.3,1)";
+      }, 80+i*70); });
+
+      var valText = document.createElementNS(ns,"text");
+      valText.setAttribute("x", x+barW/2); valText.setAttribute("y", y-8);
+      valText.setAttribute("text-anchor","middle"); valText.setAttribute("font-size","13"); valText.setAttribute("font-weight","700");
+      valText.setAttribute("font-family","JetBrains Mono, monospace");
+      valText.style.fill = "#64748b";
+      valText.textContent = c.count;
+      svg.appendChild(valText);
+
+      var label = document.createElementNS(ns,"text");
+      label.setAttribute("x", x+barW/2); label.setAttribute("y", h-30);
+      label.setAttribute("text-anchor","middle"); label.setAttribute("font-size","10.5"); label.setAttribute("font-family","Inter, sans-serif");
+      label.style.fill = "#64748b";
+      label.textContent = c.label;
+      svg.appendChild(label);
+    });
+  }
+
+  /* ---------- Section 10: Pricing ---------- */
+  function renderSection10(){
+    document.getElementById("pricingGrid").innerHTML = pricingCache.map(function(p){
+      return '<div class="glass price-card' + (p.featured?' featured':'') + '">' +
+        (p.featured ? '<span class="pc-badge">Most Popular</span>' : '') +
+        '<div class="pc-tier">' + p.tier + '</div>' +
+        '<div class="pc-price">' + p.price + '<span>' + p.period + '</span></div>' +
+        '<ul>' + p.features.map(function(f){return '<li>'+escapeHtml(f)+'</li>';}).join("") + '</ul>' +
+        '</div>';
+    }).join("");
+  }
+
+  /* ---------- Section 11: Risks ---------- */
+  function renderSection11(){
+    document.getElementById("riskList").innerHTML = risksCache.map(function(r){
+      return '<div class="glass risk-row">' +
+        '<div class="risk-name">' + escapeHtml(r.risk) + '</div>' +
+        '<div><span class="badge ' + (r.probability>=60?'badge-high':r.probability>=35?'badge-medium':'badge-low') + '">P: ' + r.probability + '%</span></div>' +
+        '<div><span class="badge ' + (r.impact>=60?'badge-high':r.impact>=35?'badge-medium':'badge-low') + '">I: ' + r.impact + '%</span></div>' +
+        '<div style="font-size:0.8rem;color:var(--text-2);">' + escapeHtml(r.mitigation) + '</div>' +
+        '</div>';
+    }).join("");
+
+    buildBubbleChart();
+  }
+
+  function buildBubbleChart(){
+    var svg = document.getElementById("bubbleChartSvg");
+    svg.innerHTML = "";
+    var ns = "http://www.w3.org/2000/svg";
+    var w=600,h=320, pad=50;
+
+    var xAxis = document.createElementNS(ns,"line");
+    xAxis.setAttribute("x1",pad); xAxis.setAttribute("y1",h-pad); xAxis.setAttribute("x2",w-pad); xAxis.setAttribute("y2",h-pad);
+    xAxis.setAttribute("stroke","rgba(100,116,139,0.3)");
+    svg.appendChild(xAxis);
+    var yAxis = document.createElementNS(ns,"line");
+    yAxis.setAttribute("x1",pad); yAxis.setAttribute("y1",pad); yAxis.setAttribute("x2",pad); yAxis.setAttribute("y2",h-pad);
+    yAxis.setAttribute("stroke","rgba(100,116,139,0.3)");
+    svg.appendChild(yAxis);
+
+    function axisLabel(x,y,text,anchor){
+      var t = document.createElementNS(ns,"text");
+      t.setAttribute("x",x); t.setAttribute("y",y);
+      t.setAttribute("font-size","10"); t.setAttribute("font-family","JetBrains Mono, monospace");
+      t.setAttribute("text-anchor", anchor||"middle");
+      t.style.fill = "#64748b";
+      t.textContent = text;
+      svg.appendChild(t);
+    }
+    axisLabel(w/2, h-12, "Probability →");
+    axisLabel(18, h/2, "Impact ↑", "middle");
+
+    risksCache.forEach(function(r,i){
+      var x = pad + (r.probability/100) * (w-pad-40);
+      var y = (h-pad) - (r.impact/100) * (h-pad-40);
+      var radius = 10 + (r.impact/100)*10;
+      var color = (r.probability*r.impact/100) >= 45 ? "#ef4444" : (r.probability*r.impact/100) >= 25 ? "#f59e0b" : "#10b981";
+
+      var circle = document.createElementNS(ns,"circle");
+      circle.setAttribute("cx",x); circle.setAttribute("cy",y); circle.setAttribute("r",0);
+      circle.setAttribute("fill",color); circle.setAttribute("fill-opacity","0.75");
+      circle.setAttribute("stroke","#fff"); circle.setAttribute("stroke-width","1.5");
+      svg.appendChild(circle);
+      requestAnimationFrame(function(){ setTimeout(function(){ circle.setAttribute("r", radius); circle.style.transition="r .7s cubic-bezier(.16,1,.3,1)"; }, 80+i*80); });
+
+      var label = document.createElementNS(ns,"text");
+      label.setAttribute("x",x); label.setAttribute("y",y-radius-6);
+      label.setAttribute("text-anchor","middle"); label.setAttribute("font-size","9");
+      label.setAttribute("font-family","Inter, sans-serif");
+      label.style.fill = "#64748b";
+      label.textContent = "R" + (i+1);
+      svg.appendChild(label);
+    });
+  }
+
+  /* ---------- Section 12: Roadmap ---------- */
+  function renderSection12(){
+    document.getElementById("roadmapBody").innerHTML = roadmapCache.map(function(w){
+      return '<div class="week-block"><div class="week-head">' + w.week + ' <span class="week-chip">Milestones</span></div>' +
+        w.milestones.map(function(m){ return '<div class="milestone-row"><span class="ms-dot"></span>' + escapeHtml(m) + '</div>'; }).join("") +
+      '</div>';
+    }).join("");
+  }
+
+  /* ---------- Section 13: Action Checklist ---------- */
+  function renderSection13(){
+    var checked = {};
+    try{ checked = JSON.parse(localStorage.getItem(CHECKLIST_KEY) || "{}"); } catch(e){}
+
+    var box = document.getElementById("actionChecklist");
+    box.innerHTML = actionsCache.map(function(a,i){
+      var isChecked = !!checked[i];
+      return '<div class="check-row' + (isChecked?' checked':'') + '" data-idx="' + i + '">' +
+        '<div class="check-box">' + (isChecked?'✓':'') + '</div>' +
+        '<div class="check-text">' + escapeHtml(a) + '</div>' +
+        '</div>';
+    }).join("");
+
+    box.querySelectorAll(".check-row").forEach(function(row){
+      row.addEventListener("click", function(){
+        var idx = row.getAttribute("data-idx");
+        var isNowChecked = !row.classList.contains("checked");
+        row.classList.toggle("checked");
+        row.querySelector(".check-box").textContent = isNowChecked ? "✓" : "";
+        var state = {};
+        try{ state = JSON.parse(localStorage.getItem(CHECKLIST_KEY) || "{}"); } catch(e){}
+        state[idx] = isNowChecked;
+        try{ localStorage.setItem(CHECKLIST_KEY, JSON.stringify(state)); } catch(e){}
+      });
+    });
+  }
+
+  /* ---------- Section 14: Scores ---------- */
+  function renderSection14(){
+    var items = [
+      { key:"customerClarity", label:"Customer Clarity" },
+      { key:"problemSeverity", label:"Problem Severity" },
+      { key:"pmfPotential", label:"PMF Potential" },
+      { key:"mvpReadiness", label:"MVP Readiness" }
+    ];
+    var circumference = 2*Math.PI*55;
+    document.getElementById("gaugeGrid").innerHTML = items.map(function(it){
+      var v = scoresCache[it.key];
+      var color = scoreColor(v);
+      var offset = circumference - (circumference*v/100);
+      return '<div class="glass gauge-card">' +
+        '<div class="gc-label">' + it.label + '</div>' +
+        '<div class="gauge-wrap"><svg viewBox="0 0 130 130">' +
+          '<circle class="gauge-track" cx="65" cy="65" r="55"></circle>' +
+          '<circle class="gauge-fill" cx="65" cy="65" r="55" stroke="'+color+'" stroke-dasharray="'+circumference.toFixed(1)+'" stroke-dashoffset="'+circumference.toFixed(1)+'" data-offset="'+offset.toFixed(1)+'"></circle>' +
+        '</svg><div class="gauge-center"><div class="gauge-num" style="color:'+color+'">'+v+'</div></div></div>' +
+        '<div class="badge ' + (v<40?'badge-red':v<70?'badge-yellow':'badge-green') + '">' + scoreLabel(v) + '</div>' +
+        '</div>';
+    }).join("");
+
+    requestAnimationFrame(function(){
+      document.querySelectorAll("#gaugeGrid .gauge-fill").forEach(function(circle){
+        setTimeout(function(){ circle.style.strokeDashoffset = circle.getAttribute("data-offset"); }, 100);
+      });
+    });
+
+    buildRadar();
+  }
+
+  function buildRadar(){
+    var svg = document.getElementById("radarSvg");
+    svg.innerHTML = "";
+    var ns = "http://www.w3.org/2000/svg";
+    var cx=170,cy=170,maxR=120;
+    var dims = [
+      { label:"Customer Clarity", value: scoresCache.customerClarity },
+      { label:"Problem Severity", value: scoresCache.problemSeverity },
+      { label:"PMF Potential", value: scoresCache.pmfPotential },
+      { label:"MVP Readiness", value: scoresCache.mvpReadiness }
+    ];
+    var n = dims.length;
+
+    function pointFor(i,value){
+      var angle = (Math.PI*2*i/n) - Math.PI/2;
+      var r = (value/100)*maxR;
+      return { x: cx+r*Math.cos(angle), y: cy+r*Math.sin(angle) };
+    }
+
+    for(var lvl=1; lvl<=4; lvl++){
+      var pts=[];
+      for(var i=0;i<n;i++){ var p=pointFor(i,(lvl/4)*100); pts.push(p.x.toFixed(1)+","+p.y.toFixed(1)); }
+      var ring = document.createElementNS(ns,"polygon");
+      ring.setAttribute("points", pts.join(" "));
+      ring.setAttribute("fill","none"); ring.setAttribute("stroke","rgba(100,116,139,0.18)");
+      svg.appendChild(ring);
+    }
+
+    for(var i=0;i<n;i++){
+      var outer = pointFor(i,100);
+      var line = document.createElementNS(ns,"line");
+      line.setAttribute("x1",cx); line.setAttribute("y1",cy); line.setAttribute("x2",outer.x); line.setAttribute("y2",outer.y);
+      line.setAttribute("stroke","rgba(100,116,139,0.2)");
+      svg.appendChild(line);
+
+      var lp = pointFor(i,118);
+      var text = document.createElementNS(ns,"text");
+      text.setAttribute("x",lp.x); text.setAttribute("y",lp.y);
+      text.setAttribute("text-anchor","middle"); text.setAttribute("dominant-baseline","middle");
+      text.setAttribute("font-size","9.5"); text.setAttribute("font-family","JetBrains Mono, monospace");
+      text.style.fill = "#64748b";
+      text.textContent = dims[i].label;
+      svg.appendChild(text);
+    }
+
+    var dataPts=[];
+    for(var i=0;i<n;i++){ var p=pointFor(i,dims[i].value); dataPts.push(p.x.toFixed(1)+","+p.y.toFixed(1)); }
+    var poly = document.createElementNS(ns,"polygon");
+    poly.setAttribute("points", dataPts.join(" "));
+    poly.setAttribute("fill","rgba(37,99,235,0.18)"); poly.setAttribute("stroke","#2563eb"); poly.setAttribute("stroke-width","2");
+    poly.style.opacity="0"; poly.style.transformOrigin=cx+"px "+cy+"px"; poly.style.transform="scale(0.7)";
+    poly.style.transition="opacity .8s ease, transform .8s cubic-bezier(.16,1,.3,1)";
+    svg.appendChild(poly);
+    requestAnimationFrame(function(){ setTimeout(function(){ poly.style.opacity="1"; poly.style.transform="scale(1)"; }, 100); });
+
+    var tooltip = document.createElement("div");
+    tooltip.className = "svg-tooltip";
+    var box = document.querySelector(".radar-box");
+    box.style.position = "relative";
+    box.appendChild(tooltip);
+
+    for(var i=0;i<n;i++){
+      var p = pointFor(i, dims[i].value);
+      var dot = document.createElementNS(ns,"circle");
+      dot.setAttribute("cx",p.x); dot.setAttribute("cy",p.y); dot.setAttribute("r","4");
+      dot.setAttribute("fill","#2563eb"); dot.setAttribute("stroke","#fff"); dot.setAttribute("stroke-width","1.5");
+      dot.style.cursor="pointer";
+      (function(dim){
+        dot.addEventListener("mouseenter", function(){ tooltip.textContent = dim.label+": "+dim.value+"/100"; tooltip.classList.add("show"); });
+        dot.addEventListener("mousemove", function(e){
+          var rect = box.getBoundingClientRect();
+          tooltip.style.left = (e.clientX-rect.left)+"px"; tooltip.style.top = (e.clientY-rect.top)+"px";
+        });
+        dot.addEventListener("mouseleave", function(){ tooltip.classList.remove("show"); });
+      })(dims[i]);
+      svg.appendChild(dot);
+    }
+  }
+
+  /* ---------- Section 15: Verdict ---------- */
+  function renderSection15(){
+    var badge = document.getElementById("verdictBadge");
+    badge.textContent = verdictCache.label;
+    badge.className = "verdict-badge-xl " + verdictCache.cls;
+    document.getElementById("verdictExplain").textContent = verdictCache.explain + " (Composite score: " + verdictCache.avg + "/100)";
+  }
+
+  /* ============================================================================
+     SIDEBAR NAV, COLLAPSE, SEARCH, MOBILE TOGGLE
+  ============================================================================ */
+  function setupReveal(){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("visible"); observer.unobserve(e.target); } });
+    }, { threshold:0.06 });
+    document.querySelectorAll(".rsection").forEach(function(el){ el.classList.add("reveal"); observer.observe(el); });
+  }
+
+  document.querySelectorAll(".nav-item[data-jump]").forEach(function(item){
+    item.addEventListener("click", function(){
+      var id = item.getAttribute("data-jump");
+      var target = document.getElementById(id);
+      if(target){
+        target.classList.remove("collapsed");
+        target.scrollIntoView({ behavior:"smooth", block:"start" });
+      }
+      document.querySelectorAll(".nav-item").forEach(function(n){ n.classList.remove("active"); });
+      item.classList.add("active");
+      document.getElementById("sidebar").classList.remove("open");
+    });
+  });
+
+  // highlight active nav item on scroll
+  var sectionEls = document.querySelectorAll(".rsection");
+  var navItemMap = {};
+  document.querySelectorAll(".nav-item[data-jump]").forEach(function(n){ navItemMap[n.getAttribute("data-jump")] = n; });
+
+  var scrollObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        document.querySelectorAll(".nav-item").forEach(function(n){ n.classList.remove("active"); });
+        var navEl = navItemMap[entry.target.id];
+        if(navEl) navEl.classList.add("active");
+      }
+    });
+  }, { rootMargin:"-20% 0px -70% 0px" });
+  sectionEls.forEach(function(s){ scrollObserver.observe(s); });
+
+  // collapse/expand
+  document.querySelectorAll(".rsection-head").forEach(function(head){
+    head.addEventListener("click", function(){
+      head.closest(".rsection").classList.toggle("collapsed");
+    });
+  });
+
+  // mobile sidebar toggle
+  document.getElementById("sidebarToggleMobile").addEventListener("click", function(){
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  /* ---------- Search in report ---------- */
+  var lastSearchMarks = [];
+  document.getElementById("reportSearch").addEventListener("input", function(e){
+    var term = e.target.value.trim();
+    lastSearchMarks.forEach(function(m){
+      var parent = m.parentNode;
+      if(parent){ parent.replaceChild(document.createTextNode(m.textContent), m); parent.normalize(); }
+    });
+    lastSearchMarks = [];
+    if(term.length < 2) return;
+
+    var container = document.getElementById("reportContainer");
+    var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+    var nodesToProcess = [];
+    var node;
+    var lowerTerm = term.toLowerCase();
+    while((node = walker.nextNode())){
+      if(node.nodeValue.toLowerCase().indexOf(lowerTerm) > -1 && node.parentNode.nodeName !== "SCRIPT"){
+        nodesToProcess.push(node);
+      }
+    }
+    var firstMatch = null;
+    nodesToProcess.forEach(function(textNode){
+      var text = textNode.nodeValue;
+      var lowerText = text.toLowerCase();
+      var idx = lowerText.indexOf(lowerTerm);
+      if(idx === -1) return;
+      var frag = document.createDocumentFragment();
+      var cursor = 0;
+      while(idx > -1){
+        frag.appendChild(document.createTextNode(text.slice(cursor, idx)));
+        var mark = document.createElement("mark");
+        mark.className = "search-hit";
+        mark.textContent = text.slice(idx, idx+term.length);
+        frag.appendChild(mark);
+        lastSearchMarks.push(mark);
+        if(!firstMatch) firstMatch = mark;
+        cursor = idx + term.length;
+        idx = lowerText.indexOf(lowerTerm, cursor);
+      }
+      frag.appendChild(document.createTextNode(text.slice(cursor)));
+      textNode.parentNode.replaceChild(frag, textNode);
+    });
+
+    if(firstMatch){
+      var sec = firstMatch.closest(".rsection");
+      if(sec) sec.classList.remove("collapsed");
+      firstMatch.scrollIntoView({ behavior:"smooth", block:"center" });
+    }
+  });
+
+  /* ---------- Edit answers ---------- */
+  document.getElementById("editAnswersBtn").addEventListener("click", function(){
+    document.getElementById("appScreen").classList.remove("active");
+    document.getElementById("intakeScreen").style.display = "flex";
+    showIntakePanel("form");
+    document.getElementById("formIdea").value = data.idea === "Not enough information provided." ? "" : data.idea;
+    document.getElementById("formProblem").value = data.problem === "Not enough information provided." ? "" : data.problem;
+    document.getElementById("formCustomers").value = data.customers === "Not enough information provided." ? "" : data.customers;
+    document.getElementById("formValidation").value = data.validationText === "Not enough information provided." ? "" : data.validationText;
+    document.getElementById("formMarket").value = data.market === "Not enough information provided." ? "" : data.market;
+  });
+
+  /* ============================================================================
+     EXPORTS
+  ============================================================================ */
+  document.getElementById("printBtn").addEventListener("click", function(){ window.print(); });
+
+  document.getElementById("exportJsonBtn").addEventListener("click", function(){
+    var payload = {
+      input: data,
+      scores: scoresCache,
+      verdict: verdictCache,
+      painPoints: painCache,
+      customerJourney: journeyCache,
+      moscow: moscowCache,
+      risks: risksCache,
+      roadmap: roadmapCache,
+      actionSheet: actionsCache,
+      pricing: pricingCache,
+      objections: objectionsCache,
+      triggers: triggersCache,
+      generatedAt: new Date().toISOString()
+    };
+    downloadFile(JSON.stringify(payload, null, 2), "blueprint-report.json", "application/json");
+  });
+
+  document.getElementById("exportMdBtn").addEventListener("click", function(){
+    var md = "# Customer & MVP Blueprint Report\n\n";
+    md += "## 1. Executive Summary\n\n";
+    md += "**Startup Idea:** " + data.idea + "\n\n**Problem:** " + data.problem + "\n\n**Market:** " + data.market + "\n\n";
+    md += "## 4. Top 10 Customer Pain Points\n\n| Rank | Pain Point | Severity |\n|---|---|---|\n";
+    painCache.forEach(function(p,i){ md += "| " + (i+1) + " | " + p.point + " | " + p.severity + " |\n"; });
+    md += "\n## 9. MoSCoW Prioritization\n\n**Must Have:**\n" + moscowCache.must.map(function(m){return "- "+m;}).join("\n");
+    md += "\n\n**Should Have:**\n" + moscowCache.should.map(function(m){return "- "+m;}).join("\n");
+    md += "\n\n**Could Have:**\n" + moscowCache.could.map(function(m){return "- "+m;}).join("\n");
+    md += "\n\n**Won't Have:**\n" + moscowCache.wont.map(function(m){return "- "+m;}).join("\n");
+    md += "\n\n## 11. Top 5 Risks\n\n| Risk | Probability | Impact | Mitigation |\n|---|---|---|---|\n";
+    risksCache.forEach(function(r){ md += "| " + r.risk + " | " + r.probability + "% | " + r.impact + "% | " + r.mitigation + " |\n"; });
+    md += "\n## 12. 30-Day MVP Plan\n\n";
+    roadmapCache.forEach(function(w){ md += "**" + w.week + ":**\n" + w.milestones.map(function(m){return "- "+m;}).join("\n") + "\n\n"; });
+    md += "## 13. Founder Action Sheet\n\n" + actionsCache.map(function(a){return "- [ ] "+a;}).join("\n");
+    md += "\n\n## 14. Scores\n\n| Metric | Score |\n|---|---|\n";
+    md += "| Customer Clarity | " + scoresCache.customerClarity + " |\n| Problem Severity | " + scoresCache.problemSeverity + " |\n| PMF Potential | " + scoresCache.pmfPotential + " |\n| MVP Readiness | " + scoresCache.mvpReadiness + " |\n";
+    md += "\n## 15. Final Verdict\n\n**" + verdictCache.label + "**\n\n" + verdictCache.explain + "\n";
+
+    downloadFile(md, "blueprint-report.md", "text/markdown");
+  });
+
+  document.getElementById("exportHtmlBtn").addEventListener("click", function(){
+    var blob = new Blob([document.documentElement.outerHTML], { type:"text/html" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "blueprint-report.html";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  function downloadFile(content, filename, mime){
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+})();
+</script>
+</body>
+</html>
